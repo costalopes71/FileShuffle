@@ -9,6 +9,14 @@ import java.time.Instant;
 
 import javafx.scene.shape.Path;
 
+/**
+ * 
+ * Class responsible for encrypting and decrypting files.
+ * @author Joao Lopes
+ * @since February 11th 2019 | v1.0
+ * @version v1.0
+ *
+ */
 public final class FileShuffle {
 
 	private File file;
@@ -30,6 +38,11 @@ public final class FileShuffle {
 		this(path.toString());
 	}
 	
+	/**
+	 * Method that encrypts the file. The boolean parameter indicates whether encryption must be done on the whole file or only part of it.
+	 * @param <bold>boolean</bold> wholeFile, indicates whether encryption must be done on the whole file or only part of it.
+	 * @throws IOException, if the file is smaller than 8 bytes or if an error ocurred while trying to read the file.
+	 */
 	public void encrypt(boolean wholeFile) throws IOException {
 		
 		Instant start = Instant.now();
@@ -37,7 +50,7 @@ public final class FileShuffle {
 		//
 		// getting the day of current date to serve as seed to change bytes
 		//
-		final long seed = file.lastModified();
+		final long seed = Instant.now().toEpochMilli();
 		
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 		
@@ -79,6 +92,11 @@ public final class FileShuffle {
 		
 	}
 	
+	/**
+	 * Method that decrypts the file. The boolean parameter indicates whether decryption must be done on the whole file or only part of it.
+	 * @param <bold>boolean</bold> wholeFile, indicates whether decryption must be done on the whole file or only part of it.
+	 * @throws IOException, if the file is smaller than 8 bytes or if an error ocurred while trying to read the file.
+	 */
 	public void decrypt(boolean wholeFile) throws IOException {
 		
 		Instant start = Instant.now();
@@ -140,10 +158,10 @@ public final class FileShuffle {
 		//
 		// getting 5% only
 		//
-		long maxPosition2Encrypt = (raf.length() / 100) * 5;
+		long maxPosition2Decrypt = (raf.length() / 100) * 5;
 		
-		if (maxPosition2Encrypt < 8) {
-			maxPosition2Encrypt = raf.length();
+		if (maxPosition2Decrypt < 8) {
+			maxPosition2Decrypt = raf.length();
 		}
 		
 		try {
@@ -155,7 +173,7 @@ public final class FileShuffle {
 				raf.seek(raf.getFilePointer() - 8);
 				raf.writeLong(decrypt);
 				
-				if (raf.getFilePointer() >= maxPosition2Encrypt)
+				if (raf.getFilePointer() >= maxPosition2Decrypt)
 					break;
 				
 			}
