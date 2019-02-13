@@ -7,6 +7,8 @@ import java.io.RandomAccessFile;
 import java.time.Duration;
 import java.time.Instant;
 
+import com.sinapsisenergia.fileshuffle.exception.EncryptException;
+
 import javafx.scene.shape.Path;
 
 /**
@@ -15,16 +17,31 @@ import javafx.scene.shape.Path;
  * 
  * @author Joao Lopes
  * @since February 11th 2019 | v1.0
- * @version v1.0
+ * @version v1.2
  *
  */
 public final class FileShuffle {
 
+	//
+	// instance attributes
+	//
 	private File file;
-	private static final String SIGNATURE = "9203903X4CRYPTX01927";
-	private final byte[] signature_bytes = SIGNATURE.getBytes();
-	private final long bytesSize = signature_bytes.length;
+	
+	private final byte[] fullFileSignatureBytes = FULL_FILE_SIGNATURE.getBytes();
+	private final byte[] partialFileSignatureBytes = PARTIAL_FILE_SIGNATURE.getBytes();
+	private final long fullFileArraySize = fullFileSignatureBytes.length;
+	private final long partialFileArraySize = partialFileSignatureBytes.length;
+	
+	//
+	// constants
+	//
+	private static final String FULL_FILE_SIGNATURE = "9203903X4CRYPTX01927";
+	private static final String PARTIAL_FILE_SIGNATURE = "0003903X4CRYPTX01000";
 
+	//
+	// Constructors
+	//
+	
 	public FileShuffle(File file) throws IOException {
 		this.file = file;
 
@@ -42,56 +59,42 @@ public final class FileShuffle {
 		this(path.toString());
 	}
 
+	//
+	// methods
+	//
+	
 	/**
 	 * Method that encrypts the file. The boolean parameter indicates whether
 	 * encryption must be done on the whole file or only part of it.
 	 * 
 	 * @param <bold>boolean</bold> wholeFile, indicates whether encryption must be
 	 *        done on the whole file or only part of it.
-	 * @throws IOException if the file is smaller than 8 bytes or if an error ocurred while trying to read the file. Or if the encryption signature is already present.
+	 * @throws IOException if an error ocurred while trying to read the file. Or if the encryption signature is already present.
+	 * @throws EncryptException if the file is smaller than 8 bytes or if encryption signature was found (in other words the file has already been ecrypted) 
 	 */
-	public void encrypt(boolean wholeFile) throws IOException {
+	public void encrypt(boolean fullEncrypt) throws IOException, EncryptException {
 
 		Instant start = Instant.now();
 
 		//
-		// getting the day of current date to serve as seed to change bytes
+		// getting the day of current date to serve as seed to shuffle bytes
 		//
 		final long seed = Instant.now().toEpochMilli();
 
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
-
+		
+		//TODO create a method to encrypt files smaller than 8 bytes
 		if (raf.length() < 8) {
 			raf.close();
-			throw new IOException("To small to encrypt");
-		}
-
-		byte[] readBytes = new byte[(int)bytesSize];
-		try {
-			raf.seek(raf.length() - bytesSize);
-			raf.read(readBytes);
-		} catch (Exception e) { }
-		
-		for (int i = 0; i < signature_bytes.length; i++) {
-			
-			if (signature_bytes[i] != readBytes[i]) {
-				break;
-			}
-			
-			if (i == signature_bytes.length - 1) {
-				
-				if (signature_bytes[i] == readBytes[i]) {
-					raf.close();
-					throw new IOException("File was already encrypted!");
-				}
-				
-			}
-			
+			throw new EncryptException("To small to encrypt");
 		}
 		
-		raf.seek(0);
-
-		if (wholeFile) {
+		if (isSignaturePresent(raf)) {
+			raf.close();
+			throw new EncryptException("File already encrypted!!! Cannot encrypt again!");
+		}
+		
+		if (fullEncrypt) {
 
 			try {
 
@@ -107,7 +110,7 @@ public final class FileShuffle {
 			} catch (EOFException e) {
 
 				raf.writeLong(seed);
-				raf.write(signature_bytes);
+				raf.write(fullFileSignatureBytes);
 				raf.close();
 
 			} catch (Exception e) {
@@ -128,11 +131,13 @@ public final class FileShuffle {
 	 * Method that decrypts the file. The boolean parameter indicates whether
 	 * decryption must be done on the whole file or only part of it.
 	 * 
-	 * @param <bold>boolean</bold> wholeFile, indicates whether decryption must be
+	 * @param <bold>boolean</bold> fullDecrypt, indicates whether decryption must be
 	 *        done on the whole file or only part of it.
-	 * @throws IOException if the file is smaller than 8 bytes or if an error ocurred while trying to read the file. Or if the encryption signature is not present.
+	 * @throws IOException or if an error ocurred while trying to read the file.
+	 * @throws EncryptException if the file is smaller than 8 bytes, if the encryption signature is not present, if the file was encrypted using different option 
+	 * (full or partial) or if it was not possible to determine the type of signature (full or partial)
 	 */
-	public void decrypt(boolean wholeFile) throws IOException {
+	public void decrypt(boolean fullDecrypt) throws IOException, EncryptException {
 
 		Instant start = Instant.now();
 
@@ -140,36 +145,38 @@ public final class FileShuffle {
 
 		if (raf.length() < 8) {
 			raf.close();
-			throw new IOException("To small to decrypt");
+			throw new EncryptException("To small to decrypt");
 		}
 
 		//
 		// test if crypt signature is in the file
 		//
-		byte[] readBytes = new byte[(int)bytesSize];
-		try {
-			raf.seek(raf.length() - bytesSize);
-			raf.read(readBytes);
-		} catch (Exception e) {
+		boolean fullFile = isFullFileSignaturePresent(raf);
+		raf.seek(0);
+		boolean partialFile = isPartialFileSignaturePresent(raf);
+		
+		if (fullFile == false && partialFile == false) {
 			raf.close();
-			throw new IOException(e);
-		}
-
-		for (int i = 0; i < readBytes.length; i++) {
-			
-			if (readBytes[i] != signature_bytes[i]) {
-				raf.close();
-				throw new IOException("Encryption signature not present! Can not decrypt!");
-			}
-			
+			throw new EncryptException("Encryption signature is not present in the file! Cannot decrypt!");
 		}
 		
+		//
+		// verifyng if the choice of the user (encrypt whole file or just partial) matches files signature
+		//
+		verifyDecryptOption(fullDecrypt, fullFile, partialFile);
 		
 		//
 		// cut signature
 		//
 		raf.seek(0);
-		raf.setLength(raf.length() - bytesSize);
+		if (fullFile) {
+			raf.setLength(raf.length() - fullFileArraySize);
+		} else if (partialFile) {
+			raf.setLength(raf.length() - partialFileArraySize);
+		} else {
+			raf.close();
+			throw new EncryptException("Could not determine full or partial file encryption signature! Cannot decrypt!");
+		}
 
 		//
 		// retrieve seed
@@ -184,7 +191,7 @@ public final class FileShuffle {
 
 		raf.seek(0);
 
-		if (wholeFile) {
+		if (fullDecrypt) {
 
 			try {
 
@@ -213,6 +220,16 @@ public final class FileShuffle {
 
 		System.out.println("Elapsed: " + Duration.between(start, Instant.now()).getSeconds() + " seconds");
 
+	}
+
+	private void verifyDecryptOption(boolean fullDecrypt, boolean fullFile, boolean partialFile) throws EncryptException {
+		if (fullDecrypt == true && (partialFile == true && fullFile == false)) {
+			throw new EncryptException("File was encrypted using partial encryption option! Cannot make full decrypt!");
+		}
+		
+		if (fullDecrypt == false && (partialFile == false && fullFile == true)) {
+			throw new EncryptException("File was encrypted using full encryption option! Cannot make partial decrypt!");
+		}
 	}
 
 	private void decrypt5000Bytes(RandomAccessFile raf, long seed) throws IOException {
@@ -266,17 +283,72 @@ public final class FileShuffle {
 
 			raf.seek(raf.length());
 			raf.writeLong(seed);
-			raf.write(signature_bytes);
+			raf.write(partialFileSignatureBytes);
 			raf.close();
 
 		} catch (EOFException e) {
 
 			raf.writeLong(seed);
-			raf.write(signature_bytes);
+			raf.write(partialFileSignatureBytes);
 			raf.close();
 
 		}
 
 	}
 
+	private boolean isFullFileSignaturePresent(RandomAccessFile raf) throws IOException {
+		
+		byte[] readBytes = new byte[(int)fullFileArraySize];
+		
+		try {
+			raf.seek(raf.length() - fullFileArraySize);
+			raf.read(readBytes);
+		} catch (Exception e) { }
+		
+		for (int i = 0; i < fullFileSignatureBytes.length; i++) {
+			
+			if (fullFileSignatureBytes[i] != readBytes[i]) {
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+	
+	private boolean isPartialFileSignaturePresent(RandomAccessFile raf) throws IOException {
+		
+		byte[] readBytes = new byte[(int)partialFileArraySize];
+		
+		try {
+			raf.seek(raf.length() - partialFileArraySize);
+			raf.read(readBytes);
+		} catch (Exception e) { }
+		
+		for (int i = 0; i < partialFileSignatureBytes.length; i++) {
+			
+			if (partialFileSignatureBytes[i] != readBytes[i]) {
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+	
+	private boolean isSignaturePresent(RandomAccessFile raf) throws IOException {
+		
+		if (isFullFileSignaturePresent(raf))
+			return true;
+		
+		raf.seek(0);
+		
+		if (isPartialFileSignaturePresent(raf))
+			return true;
+			
+		raf.seek(0);
+		
+		return false;
+	}
+	
 }
