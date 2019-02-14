@@ -10,7 +10,7 @@ public class UsageExample {
 
 	@SuppressWarnings("unused")
 	private static final String SMALL_FILE = "";
-	private static final String BIG_FILE = "/home/joao/Documentos/CEB_TODAS_SUB_20190213-130349_551.cbdb";
+	private static final String BIG_FILE = "/home/joao/Documentos/fileshuffle-v1.2.jar";
 	
 	public static void main(String[] args) {
 		
@@ -26,13 +26,13 @@ public class UsageExample {
 		}
 		
 //		try {
-//			fileShuffle.encrypt(true);
+//			fileShuffle.encrypt(false);
 //		} catch (IOException | EncryptException e) {
 //			e.printStackTrace();
 //		}
 		
 		try {
-			fileShuffle.decrypt(true);
+			fileShuffle.decrypt(false);
 		} catch (IOException | EncryptException e) {
 			e.printStackTrace();
 		}
