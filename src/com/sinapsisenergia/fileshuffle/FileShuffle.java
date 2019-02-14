@@ -177,7 +177,7 @@ public final class FileShuffle {
 	 *                          or if it was not possible to determine the type of
 	 *                          signature (full or partial)
 	 */
-	public void decrypt(boolean fullDecrypt) throws IOException, EncryptException {
+	public void decrypt() throws IOException, EncryptException {
 
 		Instant start = Instant.now();
 
@@ -199,12 +199,6 @@ public final class FileShuffle {
 			raf.close();
 			throw new EncryptException("Encryption signature is not present in the file! Cannot decrypt!");
 		}
-
-		//
-		// verifyng if the choice of the user (encrypt whole file or just partial)
-		// matches files signature
-		//
-		verifyDecryptOption(fullDecrypt, fullFile, partialFile);
 
 		//
 		// cut signature
@@ -244,7 +238,7 @@ public final class FileShuffle {
 		
 		raf.seek(0);
 
-		if (fullDecrypt) {
+		if (fullFile) {
 
 			try {
 
@@ -295,17 +289,6 @@ public final class FileShuffle {
 			return;
 		}
 		
-	}
-
-	private void verifyDecryptOption(boolean fullDecrypt, boolean fullFile, boolean partialFile)
-			throws EncryptException {
-		if (fullDecrypt == true && (partialFile == true && fullFile == false)) {
-			throw new EncryptException("File was encrypted using partial encryption option! Cannot make full decrypt!");
-		}
-
-		if (fullDecrypt == false && (partialFile == false && fullFile == true)) {
-			throw new EncryptException("File was encrypted using full encryption option! Cannot make partial decrypt!");
-		}
 	}
 
 	private void decrypt5000Bytes(RandomAccessFile raf, long seed) throws IOException {

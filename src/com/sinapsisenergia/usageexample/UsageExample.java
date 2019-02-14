@@ -26,13 +26,13 @@ public class UsageExample {
 		}
 		
 //		try {
-//			fileShuffle.encrypt(false);
+//			fileShuffle.encrypt(true);
 //		} catch (IOException | EncryptException e) {
 //			e.printStackTrace();
 //		}
 		
 		try {
-			fileShuffle.decrypt(false);
+			fileShuffle.decrypt();
 		} catch (IOException | EncryptException e) {
 			e.printStackTrace();
 		}
