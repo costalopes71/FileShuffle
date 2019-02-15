@@ -82,6 +82,13 @@ public final class FileShuffle {
 		Instant start = Instant.now();
 		
 		//
+		// verifica se a assinatura de criptografia esta presente no arquivo
+		//
+		if (isEncrypted()) {
+			throw new EncryptException("File already encrypted!!! Cannot encrypt again!");
+		}
+		
+		//
 		// getting the day of current date to serve as seed to shuffle bytes
 		//
 		final long seed = Instant.now().toEpochMilli();
@@ -92,11 +99,6 @@ public final class FileShuffle {
 		if (raf.length() < 8) {
 			raf.close();
 			throw new EncryptException("To small to encrypt");
-		}
-		
-		if (isSignaturePresent(raf)) {
-			raf.close();
-			throw new EncryptException("File already encrypted!!! Cannot encrypt again!");
 		}
 		
 		if (raf.length() > 5000 && fullEncrypt == false) {
@@ -388,17 +390,19 @@ public final class FileShuffle {
 		return true;
 	}
 
-	private boolean isSignaturePresent(RandomAccessFile raf) throws IOException {
+	public boolean isEncrypted() throws IOException {
 
-		if (isFullFileSignaturePresent(raf))
+		RandomAccessFile raf = new RandomAccessFile(file, "r");
+		
+		if (isFullFileSignaturePresent(raf)) {
+			raf.close();
 			return true;
+		}
 
-		raf.seek(0);
-
-		if (isPartialFileSignaturePresent(raf))
+		if (isPartialFileSignaturePresent(raf)) {
+			raf.close();
 			return true;
-
-		raf.seek(0);
+		}
 
 		return false;
 	}

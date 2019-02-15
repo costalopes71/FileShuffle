@@ -31,20 +31,28 @@ public class UsageExample {
 		//
 		
 		try {
-			fileShuffle.encrypt(true);
-		} catch (IOException | EncryptException e) {
-			e.printStackTrace();
+			boolean a = fileShuffle.isEncrypted();
+			System.out.println(a);
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
+		
+		
+//		try {
+//			fileShuffle.encrypt(false);
+//		} catch (IOException | EncryptException e) {
+//			e.printStackTrace();
+//		}
 		
 		//
 		// use code bellow to decrypt the file
 		//
 		
-//		try {
-//			fileShuffle.decrypt();
-//		} catch (IOException | EncryptException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			fileShuffle.decrypt();
+		} catch (IOException | EncryptException e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
