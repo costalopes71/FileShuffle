@@ -35,7 +35,7 @@ public final class FileShuffle {
 	private final byte[] partialFileSignatureBytes = PARTIAL_FILE_SIGNATURE.getBytes();
 	private final long fullFileArraySize = fullFileSignatureBytes.length;
 	private final long partialFileArraySize = partialFileSignatureBytes.length;
-	private byte isCompressed = 0;
+	private byte compressEndOfFile = 0;
 	
 	//
 	// constants
@@ -72,13 +72,10 @@ public final class FileShuffle {
 	 * Method that encrypts the file. The boolean parameter indicates whether
 	 * encryption must be done on the whole file or only part of it.
 	 * 
-	 * @param <bold>boolean</bold> wholeFile, indicates whether encryption must be
-	 *        done on the whole file or only part of it.
+	 * @param	fullEncrypt		boolean that indicates whether encryption must be done on the whole file or only part of it.
 	 * @throws IOException      if an error ocurred while trying to read the file.
-	 *                          Or if the encryption signature is already present.
-	 * @throws EncryptException if the file is smaller than 8 bytes or if encryption
-	 *                          signature was found (in other words the file has
-	 *                          already been ecrypted)
+	 * @throws EncryptException 	if the file is smaller than 8 bytes or if encryption signature was found (in other words the file has
+	 *                          	already been ecrypted)
 	 */
 	public void encrypt(boolean fullEncrypt) throws IOException, EncryptException {
 
@@ -102,8 +99,8 @@ public final class FileShuffle {
 			throw new EncryptException("File already encrypted!!! Cannot encrypt again!");
 		}
 		
-		if ((isGZipped(file) || isZipFile(file)) && raf.length() > 5000 && fullEncrypt == false) {
-			isCompressed = 1;
+		if (raf.length() > 5000 && fullEncrypt == false) {
+			compressEndOfFile = 1;
 			encryptEndOfFile(raf, seed);
 		}
 
@@ -122,7 +119,7 @@ public final class FileShuffle {
 
 			} catch (EOFException e) {
 				
-				raf.writeByte(isCompressed);
+				raf.writeByte(compressEndOfFile);
 				raf.writeLong(seed);
 				raf.write(fullFileSignatureBytes);
 				raf.close();
@@ -164,17 +161,9 @@ public final class FileShuffle {
 	}
 
 	/**
-	 * Method that decrypts the file. The boolean parameter indicates whether
-	 * decryption must be done on the whole file or only part of it.
-	 * 
-	 * @param <bold>boolean</bold> fullDecrypt, indicates whether decryption must be
-	 *        done on the whole file or only part of it.
-	 * @throws IOException      or if an error ocurred while trying to read the
-	 *                          file.
-	 * @throws EncryptException if the file is smaller than 8 bytes, if the
-	 *                          encryption signature is not present, if the file was
-	 *                          encrypted using different option (full or partial)
-	 *                          or if it was not possible to determine the type of
+	 * Method that decrypts the file.
+	 * @throws IOException      if an error ocurred while trying to read the file.
+	 * @throws EncryptException if the file is smaller than 8 bytes, if the encryption signature is not present, or if it was not possible to determine the type of
 	 *                          signature (full or partial)
 	 */
 	public void decrypt() throws IOException, EncryptException {
@@ -229,10 +218,10 @@ public final class FileShuffle {
 		// get isCompressed flag
 		//
 		raf.seek(raf.length() - 1);
-		isCompressed = raf.readByte();
+		compressEndOfFile = raf.readByte();
 		raf.setLength(raf.length() - 1);
 		
-		if (isCompressed == 1) {
+		if (compressEndOfFile == 1) {
 			decryptEndFile(raf, seed);
 		}
 		
@@ -341,14 +330,14 @@ public final class FileShuffle {
 			}
 
 			raf.seek(raf.length());
-			raf.writeByte(isCompressed);
+			raf.writeByte(compressEndOfFile);
 			raf.writeLong(seed);
 			raf.write(partialFileSignatureBytes);
 			raf.close();
 
 		} catch (EOFException e) {
 
-			raf.writeByte(isCompressed);
+			raf.writeByte(compressEndOfFile);
 			raf.writeLong(seed);
 			raf.write(partialFileSignatureBytes);
 			raf.close();
@@ -414,7 +403,7 @@ public final class FileShuffle {
 		return false;
 	}
 
-	private static boolean isGZipped(File f) {
+	public static boolean isGZipped(File f) {
 		int magic = 0;
 
 		try {
@@ -428,7 +417,7 @@ public final class FileShuffle {
 		return magic == GZIPInputStream.GZIP_MAGIC;
 	}
 
-	private static boolean isZipFile(File file) throws IOException {
+	public static boolean isZipFile(File file) throws IOException {
 
 		if (file.length() < 4) {
 			return false;

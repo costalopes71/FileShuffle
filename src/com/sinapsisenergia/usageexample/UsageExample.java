@@ -7,14 +7,15 @@ import com.sinapsisenergia.fileshuffle.FileShuffle;
 import com.sinapsisenergia.fileshuffle.exception.EncryptException;
 
 public class UsageExample {
-
-	@SuppressWarnings("unused")
-	private static final String SMALL_FILE = "";
-	private static final String BIG_FILE = "/home/joao/Documentos/fileshuffle-v1.2.jar";
+	
+	//
+	// insert file absolute path
+	//
+	private static final String FILE_PATH = "/home/examples/Documentos/caelum-java-web-fj21.pdf";
 	
 	public static void main(String[] args) {
 		
-		File file = new File(BIG_FILE);
+		File file = new File(FILE_PATH);
 		
 		FileShuffle fileShuffle;
 		
@@ -25,17 +26,25 @@ public class UsageExample {
 			return;
 		}
 		
-//		try {
-//			fileShuffle.encrypt(true);
-//		} catch (IOException | EncryptException e) {
-//			e.printStackTrace();
-//		}
+		//
+		// use code bellow to encrypt the file
+		//
 		
 		try {
-			fileShuffle.decrypt();
+			fileShuffle.encrypt(true);
 		} catch (IOException | EncryptException e) {
 			e.printStackTrace();
 		}
+		
+		//
+		// use code bellow to decrypt the file
+		//
+		
+//		try {
+//			fileShuffle.decrypt();
+//		} catch (IOException | EncryptException e) {
+//			e.printStackTrace();
+//		}
 		
 	}
 	
