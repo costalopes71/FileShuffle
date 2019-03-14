@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.zip.GZIPInputStream;
 
@@ -79,8 +78,6 @@ public final class FileShuffle {
 	 */
 	public void encrypt(boolean fullEncrypt) throws IOException, EncryptException {
 
-		Instant start = Instant.now();
-		
 		//
 		// verifica se a assinatura de criptografia esta presente no arquivo
 		//
@@ -136,8 +133,6 @@ public final class FileShuffle {
 
 		}
 
-		System.out.println("Elapsed: " + Duration.between(start, Instant.now()).getSeconds() + " seconds");
-
 	}
 
 	private void encryptEndOfFile(RandomAccessFile raf, long seed) throws IOException {
@@ -169,8 +164,6 @@ public final class FileShuffle {
 	 *                          signature (full or partial)
 	 */
 	public void decrypt() throws IOException, EncryptException {
-
-		Instant start = Instant.now();
 
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
@@ -255,8 +248,6 @@ public final class FileShuffle {
 			decrypt5000Bytes(raf, seed);
 
 		}
-
-		System.out.println("Elapsed: " + Duration.between(start, Instant.now()).getSeconds() + " seconds");
 
 	}
 
@@ -407,7 +398,7 @@ public final class FileShuffle {
 		return false;
 	}
 
-	public static boolean isGZipped(File f) {
+	public static boolean isGZipped(File f) throws IOException {
 		int magic = 0;
 
 		try {
@@ -415,7 +406,7 @@ public final class FileShuffle {
 			magic = raf.read() & 0xff | ((raf.read() << 8) & 0xff00);
 			raf.close();
 		} catch (Throwable e) {
-			e.printStackTrace(System.err);
+			throw new IOException(e);
 		}
 
 		return magic == GZIPInputStream.GZIP_MAGIC;
