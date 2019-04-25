@@ -1,4 +1,4 @@
-package com.sinapsisenergia.fileshuffle.exception;
+package com.costalopes.fileshuffle.exception;
 
 public class EncryptException extends Exception {
 

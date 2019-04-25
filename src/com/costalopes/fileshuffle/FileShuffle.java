@@ -1,4 +1,4 @@
-package com.sinapsisenergia.fileshuffle;
+package com.costalopes.fileshuffle;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -10,7 +10,7 @@ import java.io.RandomAccessFile;
 import java.time.Instant;
 import java.util.zip.GZIPInputStream;
 
-import com.sinapsisenergia.fileshuffle.exception.EncryptException;
+import com.costalopes.fileshuffle.exception.EncryptException;
 
 import javafx.scene.shape.Path;
 
@@ -39,8 +39,8 @@ public final class FileShuffle {
 	//
 	// constants
 	//
-	private static final String FULL_FILE_SIGNATURE = "9203903X4CRYPTX01927";
-	private static final String PARTIAL_FILE_SIGNATURE = "0003903X4CRYPTX01000";
+	private static final String FULL_FILE_SIGNATURE = "YOUR_FULL_FILE_SIGNATURE_IN_HERE"; // change this value to your signature
+	private static final String PARTIAL_FILE_SIGNATURE = "YOUR_PARTIAL_FILE_SIGNATURE_IN_HERE"; // change this value to your signature
 
 	//
 	// Constructors

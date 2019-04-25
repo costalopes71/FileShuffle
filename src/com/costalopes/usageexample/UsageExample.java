@@ -1,17 +1,17 @@
-package com.sinapsisenergia.usageexample;
+package com.costalopes.usageexample;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.sinapsisenergia.fileshuffle.FileShuffle;
-import com.sinapsisenergia.fileshuffle.exception.EncryptException;
+import com.costalopes.fileshuffle.FileShuffle;
+import com.costalopes.fileshuffle.exception.EncryptException;
 
 public class UsageExample {
 	
 	//
 	// insert file absolute path
 	//
-	private static final String FILE_PATH = "/home/examples/Documentos/caelum-java-web-fj21.pdf";
+	private static final String FILE_PATH = "/home/joao/Documentos/example.txt";
 	
 	public static void main(String[] args) {
 		
@@ -26,16 +26,16 @@ public class UsageExample {
 			return;
 		}
 		
-		//
-		// use code bellow to encrypt the file
-		//
-		
 		try {
 			boolean a = fileShuffle.isEncrypted();
 			System.out.println(a);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+		
+		//
+		// use code bellow to encrypt the file
+		//
 		
 		
 //		try {
